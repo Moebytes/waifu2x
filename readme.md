@@ -1,6 +1,6 @@
 <div align="left">
   <p>
-    <a href="https://moebits.github.io/waifu2x/"><img src="https://raw.githubusercontent.com/Moebytes/waifu2x/master/assets/waifu2xlogo.png" width="500" /></a>
+    <a href="https://moebytes.github.io/waifu2x/"><img src="https://raw.githubusercontent.com/Moebytes/waifu2x/master/assets/waifu2xlogo.png" width="500" /></a>
   </p>
   <p>
     <a href="https://nodei.co/npm/waifu2x/"><img src="https://nodei.co/npm/waifu2x.png" /></a>
