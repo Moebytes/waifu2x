@@ -1,6 +1,6 @@
 {
   "name": "waifu2x",
-  "version": "1.4.8",
+  "version": "1.5.0",
   "description": "2x upscaling of images with waifu2x",
   "main": "dist/waifu2x.js",
   "types": "dist/waifu2x.d.ts",
@@ -34,10 +34,10 @@
     "fluent-ffmpeg": "^2.1.2",
     "get-pixels": "^3.3.2",
     "gif-encoder": "^0.7.2",
-    "gif-frames": "github:Moebytes/gif-frames#no-cumulative",
+    "gif-frames": "github:Moestash/gif-frames#no-cumulative",
     "image-size": "^1.0.2",
     "is-url": "^1.2.4",
-    "pdfjs-dist": "github:Moebytes/pdfjs-dist",
+    "pdfjs-dist": "github:Moestash/pdfjs-dist",
     "rife-fps": "^0.0.9"
   }
 }
