@@ -7,6 +7,8 @@ import child_process, {ChildProcess} from "child_process"
 import GifEncoder from "gif-encoder"
 import getPixels from "get-pixels"
 import gifFrames from "gif-frames"
+import sharp from "sharp"
+import {framesFromApng, framesToApng, ImageData} from "sharp-apng"
 import PDFDocument from "@react-pdf/pdfkit"
 import {pdfImages} from "./pdf-images"
 import rife from "rife-fps"
@@ -94,6 +96,7 @@ export interface Waifu2xPDFOptions extends Waifu2xOptions {
     noResume?: boolean
     pngFrames?: boolean
     downscaleHeight?: number
+    dpi?: number
 }
 
 export default class Waifu2x {
@@ -549,6 +552,110 @@ export default class Waifu2x {
         return retArray
     }
 
+    public static upscaleAPNG = async (source: string, dest?: string, options?: Waifu2xGIFOptions, progress?: (current: number, total: number) => void | boolean) => {
+        options = {...options}
+        if (!dest) dest = "./"
+        let frames = [] as {delay: number, frame: Buffer}[]
+        
+        let data = framesFromApng(fs.readFileSync(source), true) as ImageData
+        for (let i = 0; i < data.frames.length; i++) {
+            let frame = data.frames[i]
+            frames.push({delay: Number(data.delay[i]), frame: await frame.png().toBuffer()})
+        }
+
+        let {folder, image} = Waifu2x.parseFilename(source, dest, "2x")
+        if (!path.isAbsolute(source) && !path.isAbsolute(dest)) {
+            let local = __dirname.includes("node_modules") ? path.join(__dirname, "../../../") : path.join(__dirname, "..")
+            folder = path.join(local, folder)
+        }
+        let frameDest = `${folder}/${path.basename(source, path.extname(source))}Frames`
+        let resume = 0
+        if (fs.existsSync(frameDest)) {
+            const matching = Waifu2x.findMatchingSettings(frameDest, options)
+            if (matching) {
+                frameDest = matching
+                resume = fs.readdirSync(`${frameDest}/upscaled`).length
+            } else {
+                frameDest = Waifu2x.newDest(frameDest)
+                fs.mkdirSync(frameDest, {recursive: true})
+                fs.writeFileSync(`${frameDest}/settings.json`, JSON.stringify(options))
+            }
+        } else {
+            fs.mkdirSync(frameDest, {recursive: true})
+            fs.writeFileSync(`${frameDest}/settings.json`, JSON.stringify(options))
+        }
+        const constraint = options.speed > 1 ? frames.length / options.speed : frames.length
+        let step = Math.ceil(frames.length / constraint)
+        let frameArray: string[] = []
+        let delayArray: number[] = []
+
+        for (let i = 0; i < frames.length; i += step) {
+            fs.writeFileSync(`${frameDest}/frame${i}.png`, frames[i].frame)
+            frameArray.push(`${frameDest}/frame${i}.png`)
+            delayArray.push(frames[i].delay)
+        }
+        if (options.speed < 1) delayArray = delayArray.map((n) => n / options.speed)
+        const upScaleDest = `${frameDest}/upscaled`
+        if (!fs.existsSync(upScaleDest)) fs.mkdirSync(upScaleDest, {recursive: true})
+        options.rename = ""
+        let scaledFrames = fs.readdirSync(upScaleDest).map((f) => `${upScaleDest}/${path.basename(f)}`)
+        let cancel = false
+        if (options.scale !== 1) {
+            let counter = resume
+            let total = frameArray.length
+            let queue: string[][] = []
+            if (!options.parallelFrames) options.parallelFrames = 1
+            frameArray = frameArray.slice(resume)
+            while (frameArray.length) queue.push(frameArray.splice(0, options.parallelFrames))
+            if (progress) progress(counter++, total)
+            for (let i = 0; i < queue.length; i++) {
+                await Promise.all(queue[i].map(async (f) => {
+                    const destPath = await Waifu2x.upscaleImage(f, `${upScaleDest}/${path.basename(f)}`, options)
+                    scaledFrames.push(destPath)
+                    const stop = progress ? progress(counter++, total) : false
+                    if (stop) cancel = true
+                }))
+                if (cancel) break
+            }
+        } else {
+            scaledFrames = frameArray
+        }
+        scaledFrames = scaledFrames.sort(new Intl.Collator(undefined, {numeric: true, sensitivity: "base"}).compare)
+        if (options.reverse) {
+            scaledFrames = scaledFrames.reverse()
+            delayArray = delayArray.reverse()
+        }
+        const finalDest = path.join(folder, image)
+        const images = scaledFrames.map((f) => sharp(f))
+        await framesToApng(images, finalDest, {delay: delayArray})
+        if (options.noResume || !cancel) Waifu2x.removeDirectory(frameDest)
+        return path.normalize(finalDest).replace(/\\/g, "/")
+    }
+
+    public static upscaleAPNGs = async (sourceFolder: string, destFolder?: string, options?: Waifu2xGIFOptions, 
+        totalProgress?: (current: number, total: number) => void | boolean, 
+        progress?: (current: number, total: number) => void | boolean) => {
+        options = {...options}
+        const files = fs.readdirSync(sourceFolder)
+        if (sourceFolder.endsWith("/")) sourceFolder = sourceFolder.slice(0, -1)
+        const fileMap = files.map((file) => `${sourceFolder}/${file}`)
+        if (!options.limit) options.limit = fileMap.length
+        const retArray: string[] = []
+        if (totalProgress) totalProgress(0, options.limit)
+        for (let i = 0; i < options.limit; i++) {
+            if (!fileMap[i]) break
+            try {
+                const ret = await Waifu2x.upscaleAPNG(fileMap[i], destFolder, options, progress)
+                const stop = totalProgress ? totalProgress(i + 1, options.limit) : false
+                retArray.push(ret)
+                if (stop) break
+            } catch (err) {
+                continue
+            }
+        }
+        return retArray
+    }
+
     private static dumpWebpFrames = async (source: string, frameDest?: string, webpPath?: string) => {
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
         let program = `cd "${absolute}" && ./anim_dump.exe`
@@ -895,7 +1002,7 @@ export default class Waifu2x {
         const saveFilename = path.basename(savePath, path.extname(savePath))
         const output = await pdfImages(source, {height: options?.downscaleHeight ? options.downscaleHeight : null, type: options?.pngFrames ? "png" : "jpg"})
         for (let i = 0; i < output.length; i++) {
-            fs.writeFileSync(path.join(savePath, `${saveFilename}-${String(i+1).padStart(3, "0")}.png`), output[i])
+            fs.writeFileSync(path.join(savePath, `${saveFilename}-${String(i+1).padStart(3, "0")}.${options?.pngFrames ? "png" : "jpg"}`), output[i])
         }
         return savePath
     }

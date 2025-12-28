@@ -16,8 +16,14 @@ const renderPage = async (pdfDocument: any, pageNumber: number, options?: any) =
         viewport = page.getViewport({scale: newScale})
     }
 
-    const canvas = createCanvas(viewport.width, viewport.height)
+    const dpiScale = options.dpi ? options.dpi / 72 : 300 / 72
+
+    const canvas = createCanvas(
+        Math.floor(viewport.width * dpiScale),
+        Math.floor(viewport.height * dpiScale)
+    )
     const ctx = canvas.getContext("2d")
+    ctx.setTransform(dpiScale, 0, 0, dpiScale, 0, 0)
 
     const canvasFactory = {
         create: (width: number, height: number) => {
@@ -55,7 +61,7 @@ export const pdfImages = async (pdf: string | Buffer | Uint8Array, options?: {wi
             const arrayBuffer = await fetch(pdf).then((r) => r.arrayBuffer())
             pdfData = new Uint8Array(arrayBuffer)
         } else if (pdf.includes("base64")) {
-            pdfData = new Uint8Array(Buffer.from(pdf.split(",")[1], "base64"));
+            pdfData = new Uint8Array(Buffer.from(pdf.split(",")[1], "base64"))
         } else {
             pdfData = new Uint8Array(fs.readFileSync(pdf))
         }
@@ -81,13 +87,17 @@ export const pdfImages = async (pdf: string | Buffer | Uint8Array, options?: {wi
         }
     } else {
         for (let i = 1; i <= pdfDocument.numPages; i++) {
-            let currentPage = await renderPage(pdfDocument, i, options)
-            if (currentPage) {
-              if (options.base64) {
-                outPages.push(currentPage.toString("base64"))
-              } else {
-                outPages.push(new Uint8Array(currentPage))
-              }
+            try {
+                let currentPage = await renderPage(pdfDocument, i, options)
+                if (currentPage) {
+                if (options.base64) {
+                    outPages.push(currentPage.toString("base64"))
+                } else {
+                    outPages.push(new Uint8Array(currentPage))
+                }
+                }
+            } catch {
+                console.log(`Error: ${i} / ${pdfDocument.numPages}`)
             }
         }
     }
