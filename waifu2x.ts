@@ -260,15 +260,25 @@ export default class Waifu2x {
         }
         let command = ""
         if (options.upscaler === "waifu2x") {
-            let program = `cd "${absolute}" && waifu2x-ncnn-vulkan.exe`
-            if (process.platform === "darwin") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan.app`
-            if (process.platform === "linux") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan`
-            if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan-arm`
-            const ext = path.extname(source).replace(".", "")
-            command = `${program} -i "${sourcePath}" -o "${destPath}" -f ${ext}`
-            if (options.scale) command +=  ` -s ${options.scale}`
-            if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
-            if (options.waifu2xModel) command += ` -m "${options.waifu2xModel}"`
+            if (process.platform === "win32") {
+                let program = `cd "${absolute}" && waifu2x-converter-cpp.exe`
+                command = `${program} -i "${sourcePath}" -o "${destPath}" -s`
+                if (options.noise) command += ` --noise-level ${options.noise}`
+                if (options.scale) command +=  ` --scale-ratio ${options.scale}`
+                if (options.mode) command += ` -m ${options.mode}`
+                if (options.pngCompression) command += ` -c ${options.pngCompression}`
+                if (options.jpgWebpQuality) command += ` -q ${options.jpgWebpQuality}`
+                if (options.threads) command += ` -j ${options.threads}`
+            } else {
+                let program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan.app`
+                if (process.platform === "linux") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan`
+                if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan-arm`
+                const ext = path.extname(source).replace(".", "")
+                command = `${program} -i "${sourcePath}" -o "${destPath}" -f ${ext}`
+                if (options.scale) command +=  ` -s ${options.scale}`
+                if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
+                if (options.waifu2xModel) command += ` -m "${options.waifu2xModel}"`
+            }
         } else if (options.upscaler === "real-esrgan") {
             let program = `cd "${absolute}" && realesrgan-ncnn-vulkan.exe`
             if (process.platform === "darwin") program = `cd "${absolute}" && ./realesrgan-ncnn-vulkan.app`
