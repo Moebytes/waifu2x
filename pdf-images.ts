@@ -1,7 +1,8 @@
 import {createCanvas} from "@napi-rs/canvas"
+import * as pdfjs from "./pdf.min.mjs"
 import fs from "fs"
 
-const pdfjs = require("pdfjs-dist/build/pdf.js")
+pdfjs.GlobalWorkerOptions.workerSrc = "./pdf.worker.min.mjs"
 
 const renderPage = async (pdfDocument: any, pageNumber: number, options?: any) => {
     const page = await pdfDocument.getPage(pageNumber)

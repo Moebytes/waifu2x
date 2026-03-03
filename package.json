@@ -1,12 +1,13 @@
 {
   "name": "waifu2x",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "2x upscaling of images with waifu2x",
   "main": "dist/waifu2x.js",
   "types": "dist/waifu2x.d.ts",
   "scripts": {
-    "start": "tsc && node dist/start.js",
-    "prepublishOnly": "tsc"
+    "start": "npm run copy && tsc && node dist/start.js",
+    "copy": "cp ./pdf.min.mjs dist/pdf.min.mjs && cp ./pdf.worker.min.mjs dist/pdf.worker.min.mjs",
+    "prepublishOnly": "npm run copy && tsc"
   },
   "keywords": [
     "waifu2x",
@@ -38,7 +39,7 @@
     "gif-frames": "github:Moestash/gif-frames#no-cumulative",
     "image-size": "^1.0.2",
     "is-url": "^1.2.4",
-    "pdfjs-dist": "github:Moestash/pdfjs-dist",
+    "pdfjs-dist": "^5.5.207",
     "rife-fps": "^0.1.1",
     "sharp": "^0.34.5",
     "sharp-apng": "^0.1.5"
