@@ -1,8 +1,7 @@
 import {createCanvas} from "@napi-rs/canvas"
-import * as pdfjs from "./pdf.min.mjs"
 import fs from "fs"
 
-pdfjs.GlobalWorkerOptions.workerSrc = "./pdf.worker.min.mjs"
+const pdfjs = require("pdfjs-dist/build/pdf.js")
 
 const renderPage = async (pdfDocument: any, pageNumber: number, options?: any) => {
     const page = await pdfDocument.getPage(pageNumber)
@@ -19,10 +18,21 @@ const renderPage = async (pdfDocument: any, pageNumber: number, options?: any) =
 
     const dpiScale = options.dpi ? options.dpi / 72 : 300 / 72
 
-    const canvas = createCanvas(
-        Math.floor(viewport.width * dpiScale),
-        Math.floor(viewport.height * dpiScale)
-    )
+    let width = Math.floor(viewport.width * dpiScale)
+    let height = Math.floor(viewport.height * dpiScale)
+
+    let maxBounds = 8192
+
+    if (width > maxBounds || height > maxBounds) {
+        const scale = Math.min(
+            maxBounds / width,
+            maxBounds / height
+        )
+        width = Math.floor(width * scale)
+        height = Math.floor(height * scale)
+    }
+    
+    const canvas = createCanvas(width, height)
     const ctx = canvas.getContext("2d")
     ctx.setTransform(dpiScale, 0, 0, dpiScale, 0, 0)
 
