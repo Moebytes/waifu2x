@@ -16,7 +16,7 @@ const renderPage = async (pdfDocument: any, pageNumber: number, options?: any) =
         viewport = page.getViewport({scale: newScale})
     }
 
-    const dpiScale = options.dpi ? options.dpi / 72 : 300 / 72
+    const dpiScale = options.dpi ? options.dpi / 72 : 1
 
     let width = Math.floor(viewport.width * dpiScale)
     let height = Math.floor(viewport.height * dpiScale)
