@@ -262,7 +262,8 @@ export default class Waifu2x {
         if (options.upscaler === "waifu2x") {
             if (process.platform === "win32") {
                 let program = path.join(absolute, "waifu2x-converter-cpp.exe")
-                command = `"${program}" -i "${sourcePath}" -o "${destPath}" -s`
+                let modelDir =  path.join(absolute, "models_rgb")
+                command = `"${program}" -i "${sourcePath}" -o "${destPath}" --model-dir "${modelDir}"`
                 if (options.noise) command += ` --noise-level ${options.noise}`
                 if (options.scale) command +=  ` --scale-ratio ${options.scale}`
                 if (options.mode) command += ` -m ${options.mode}`
@@ -317,6 +318,7 @@ export default class Waifu2x {
             command = `"${program}" -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
             if (options.pythonDownscale && Number(options.pythonDownscale > 0)) command += ` -d ${options.pythonDownscale}`
         }
+        console.log(command)
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         let stopped = false
