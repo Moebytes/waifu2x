@@ -318,7 +318,6 @@ export default class Waifu2x {
             command = `"${program}" -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
             if (options.pythonDownscale && Number(options.pythonDownscale > 0)) command += ` -d ${options.pythonDownscale}`
         }
-        console.log(command)
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         let stopped = false
