@@ -185,10 +185,10 @@ export default class Waifu2x {
     public static convertToWebp = async (source: string, dest: string, webpPath?: string, quality?: number) => {
         if (!quality) quality = 75
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
-        let program = `cd "${absolute}" && ./cwebp.exe`
-        if (process.platform === "darwin") program = `cd "${absolute}" && ./cwebp.app`
-        if (process.platform === "linux") program = `cd "${absolute}" && ./cwebp`
-        let command = `${program} -q ${quality} "${source}" -o "${dest}"`
+        let program = `cwebp.exe`
+        if (process.platform === "darwin") program = `./cwebp.app`
+        if (process.platform === "linux") program = `./cwebp`
+        let command = `"${path.join(absolute, program)}" -q ${quality} "${source}" -o "${dest}"`
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         await new Promise<void>((resolve, reject) => {
@@ -202,10 +202,10 @@ export default class Waifu2x {
 
     public static convertFromWebp = async (source: string, dest: string, webpPath?: string) => {
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
-        let program = `cd "${absolute}" && ./dwebp.exe`
-        if (process.platform === "darwin") program = `cd "${absolute}" && ./dwebp.app`
-        if (process.platform === "linux") program = `cd "${absolute}" && ./dwebp`
-        let command = `${program} "${source}" -o "${dest}"`
+        let program = `dwebp.exe`
+        if (process.platform === "darwin") program = `./dwebp.app`
+        if (process.platform === "linux") program = `./dwebp`
+        let command = `"${path.join(absolute, program)}" "${source}" -o "${dest}"`
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         let error = ""
@@ -261,8 +261,8 @@ export default class Waifu2x {
         let command = ""
         if (options.upscaler === "waifu2x") {
             if (process.platform === "win32") {
-                let program = `cd "${absolute}" && waifu2x-converter-cpp.exe`
-                command = `${program} -i "${sourcePath}" -o "${destPath}" -s`
+                let program = `waifu2x-converter-cpp.exe`
+                command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -s`
                 if (options.noise) command += ` --noise-level ${options.noise}`
                 if (options.scale) command +=  ` --scale-ratio ${options.scale}`
                 if (options.mode) command += ` -m ${options.mode}`
@@ -270,31 +270,31 @@ export default class Waifu2x {
                 if (options.jpgWebpQuality) command += ` -q ${options.jpgWebpQuality}`
                 if (options.threads) command += ` -j ${options.threads}`
             } else {
-                let program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan.app`
-                if (process.platform === "linux") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan`
-                if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./waifu2x-ncnn-vulkan-arm`
+                let program = `./waifu2x-ncnn-vulkan.app`
+                if (process.platform === "linux") program = `./waifu2x-ncnn-vulkan`
+                if (process.platform === "linux" && process.arch === "arm64") program = `./waifu2x-ncnn-vulkan-arm`
                 const ext = path.extname(source).replace(".", "")
-                command = `${program} -i "${sourcePath}" -o "${destPath}" -f ${ext}`
+                command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -f ${ext}`
                 if (options.scale) command +=  ` -s ${options.scale}`
                 if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
                 if (options.waifu2xModel) command += ` -m "${options.waifu2xModel}"`
             }
         } else if (options.upscaler === "real-esrgan") {
-            let program = `cd "${absolute}" && realesrgan-ncnn-vulkan.exe`
-            if (process.platform === "darwin") program = `cd "${absolute}" && ./realesrgan-ncnn-vulkan.app`
-            if (process.platform === "linux") program = `cd "${absolute}" && ./realesrgan-ncnn-vulkan`
-            if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./realesrgan-ncnn-vulkan-arm`
+            let program = `realesrgan-ncnn-vulkan.exe`
+            if (process.platform === "darwin") program = `./realesrgan-ncnn-vulkan.app`
+            if (process.platform === "linux") program = `./realesrgan-ncnn-vulkan`
+            if (process.platform === "linux" && process.arch === "arm64") program = `./realesrgan-ncnn-vulkan-arm`
             const ext = path.extname(source).replace(".", "")
-            command = `${program} -i "${sourcePath}" -o "${destPath}" -f ${ext} -n ${options.scale === 4 ? "realesrgan-x4plus-anime" : "realesr-animevideov3"}`
+            command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -f ${ext} -n ${options.scale === 4 ? "realesrgan-x4plus-anime" : "realesr-animevideov3"}`
             if (options.scale) command +=  ` -s ${options.scale}`
             if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
         } else if (options.upscaler === "real-cugan") {
-            let program = `cd "${absolute}" && realcugan-ncnn-vulkan.exe`
-            if (process.platform === "darwin") program = `cd "${absolute}" && ./realcugan-ncnn-vulkan.app`
-            if (process.platform === "linux") program = `cd "${absolute}" && ./realcugan-ncnn-vulkan`
-            if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./realcugan-ncnn-vulkan-arm`
+            let program = `realcugan-ncnn-vulkan.exe`
+            if (process.platform === "darwin") program = `./realcugan-ncnn-vulkan.app`
+            if (process.platform === "linux") program = `./realcugan-ncnn-vulkan`
+            if (process.platform === "linux" && process.arch === "arm64") program = `./realcugan-ncnn-vulkan-arm`
             const ext = path.extname(source).replace(".", "")
-            command = `${program} -i "${sourcePath}" -o "${destPath}" -f ${ext}`
+            command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -f ${ext}`
             if (options.noise) {
                 if (Number(options.scale) > 2) {
                     if (Number(options.noise) === 2) options.noise = 3
@@ -305,16 +305,16 @@ export default class Waifu2x {
             if (options.scale) command +=  ` -s ${options.scale}`
             if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
         } else if (options.upscaler === "anime4k") {
-            let program = `cd "${absolute}" && Anime4KCPP_CLI.exe`
-            if (process.platform === "darwin") program = `cd "${absolute}" && ./Anime4KCPP_CLI.app`
-            if (process.platform === "linux") program = `cd "${absolute}" && ./Anime4KCPP_CLI`
-            if (process.platform === "linux" && process.arch === "arm64") program = `cd "${absolute}" && ./ac_cli`
-            command = `${program} -i "${sourcePath}" -o "${destPath}" -A`
+            let program = `Anime4KCPP_CLI.exe`
+            if (process.platform === "darwin") program = `./Anime4KCPP_CLI.app`
+            if (process.platform === "linux") program = `./Anime4KCPP_CLI`
+            if (process.platform === "linux" && process.arch === "arm64") program = `./ac_cli`
+            command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -A`
             if (options.scale) command +=  ` -z ${options.scale}`
         } else {
             let python = process.platform === "darwin" ? "PYTORCH_ENABLE_MPS_FALLBACK=1 /usr/local/bin/python3" : "python3"
-            let program = `cd "${absolute}" && ${python} upscale.py`
-            command = `${program} -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
+            let program = `${python} upscale.py`
+            command = `"${path.join(absolute, program)}" -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
             if (options.pythonDownscale && Number(options.pythonDownscale > 0)) command += ` -d ${options.pythonDownscale}`
         }
         const child = child_process.exec(command)
@@ -668,10 +668,10 @@ export default class Waifu2x {
 
     private static dumpWebpFrames = async (source: string, frameDest?: string, webpPath?: string) => {
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
-        let program = `cd "${absolute}" && ./anim_dump.exe`
-        if (process.platform === "darwin") program = `cd "${absolute}" && ./anim_dump.app`
-        if (process.platform === "linux") program = `cd "${absolute}" && ./anim_dump`
-        let command = `${program} -folder "${frameDest}" -prefix "frame" "${source}"`
+        let program = `anim_dump.exe`
+        if (process.platform === "darwin") program = `./anim_dump.app`
+        if (process.platform === "linux") program = `./anim_dump`
+        let command = `"${path.join(absolute, program)}" -folder "${frameDest}" -prefix "frame" "${source}"`
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         await new Promise<void>((resolve, reject) => {
@@ -686,10 +686,10 @@ export default class Waifu2x {
 
     private static parseWebpDelays = async (source: string, webpPath?: string) => {
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
-        let program = `cd "${absolute}" && ./webpmux.exe`
-        if (process.platform === "darwin") program = `cd "${absolute}" && ./webpmux.app`
-        if (process.platform === "linux") program = `cd "${absolute}" && ./webpmux`
-        let command = `${program} -info "${source}"`
+        let program = `webpmux.exe`
+        if (process.platform === "darwin") program = `./webpmux.app`
+        if (process.platform === "linux") program = `./webpmux`
+        let command = `"${path.join(absolute, program)}" -info "${source}"`
         const child = child_process.exec(command)
         let data = ""
         Waifu2x.addProcess(child)
@@ -707,10 +707,10 @@ export default class Waifu2x {
         if (!quality) quality = 75
         const frames = files.map((f, i) => `-d ${delays[i]} "${f}"`).join(" ")
         const absolute = webpPath ? path.normalize(webpPath).replace(/\\/g, "/") : path.join(__dirname, "../webp")
-        let program = `cd "${absolute}" && ./img2webp.exe`
-        if (process.platform === "darwin") program = `cd "${absolute}" && ./img2webp.app`
-        if (process.platform === "linux") program = `cd "${absolute}" && ./img2webp`
-        let command = `${program} -loop "0" ${frames} -o "${dest}"`
+        let program = `img2webp.exe`
+        if (process.platform === "darwin") program = `./img2webp.app`
+        if (process.platform === "linux") program = `./img2webp`
+        let command = `"${path.join(absolute, program)}" -loop "0" ${frames} -o "${dest}"`
         const child = child_process.exec(command)
         Waifu2x.addProcess(child)
         let error = ""

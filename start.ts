@@ -6,8 +6,8 @@ const start = async () => {
     }
 
     try {
-        const result = await waifu2x.upscaleVideo("./images/141511359.webm", "./images/141511359_2x.webm", 
-        {upscaler: "real-cugan", scale: 4}, progress)
+        const result = await waifu2x.upscaleImage("./images/1.jpg", "./images/2.jpg", 
+        {upscaler: "real-cugan", scale: 4})
         console.log(result)
     } catch (e) {
         console.log(e)
