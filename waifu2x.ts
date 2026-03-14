@@ -272,7 +272,7 @@ export default class Waifu2x {
                 if (options.threads) command += ` -j ${options.threads}`
             } else {
                 let program = path.join(absolute, "waifu2x-ncnn-vulkan.app")
-                if (process.platform === "linux") path.join(absolute, "waifu2x-ncnn-vulkan")
+                if (process.platform === "linux") program = path.join(absolute, "waifu2x-ncnn-vulkan")
                 if (process.platform === "linux" && process.arch === "arm64") program = path.join(absolute, "waifu2x-ncnn-vulkan-arm")
                 const ext = path.extname(source).replace(".", "")
                 command = `"${program}" -i "${sourcePath}" -o "${destPath}" -f ${ext}`
