@@ -306,16 +306,15 @@ export default class Waifu2x {
             if (options.scale) command +=  ` -s ${options.scale}`
             if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
         } else if (options.upscaler === "anime4k") {
-            let program = path.join(absolute, "Anime4KCPP_CLI.exe")
-            if (process.platform === "darwin") program = path.join(absolute, "Anime4KCPP_CLI.app")
-            if (process.platform === "linux") program = path.join(absolute, "Anime4KCPP_CLI")
-            if (process.platform === "linux" && process.arch === "arm64") program = path.join(absolute, "ac_cli")
-            command = `"${program}" -i "${sourcePath}" -o "${destPath}" -A`
-            if (options.scale) command +=  ` -z ${options.scale}`
+            let program = path.join(absolute, "win/ac_cli.exe")
+            if (process.platform === "darwin") program = path.join(absolute, "mac/ac_cli.app")
+            if (process.platform === "linux") program = path.join(absolute, "linux/ac_cli")
+            if (process.platform === "linux" && process.arch === "arm64") program = path.join(absolute, "linux-arm/ac_cli")
+            command = `"${program}" -i "${sourcePath}" -o "${destPath}"`
+            if (options.scale) command +=  ` -f ${options.scale}`
         } else {
-            let python = process.platform === "darwin" ? "PYTORCH_ENABLE_MPS_FALLBACK=1 /usr/local/bin/python3" : "python3"
-            let program = `${python} upscale.py`
-            command = `"${program}" -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
+            let python = process.platform === "darwin" ? "/usr/local/bin/python3" : "python3"
+            command = `"${python}" "${path.join(absolute, "upscale.py")}" -i "${sourcePath}" -o "${destPath}" -m "${options.upscaler}"`
             if (options.pythonDownscale && Number(options.pythonDownscale > 0)) command += ` -d ${options.pythonDownscale}`
         }
         const child = child_process.exec(command)
