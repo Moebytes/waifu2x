@@ -6,7 +6,7 @@ const start = async () => {
     }
 
     try {
-        const result = await waifu2x.upscaleImage("./images/1.jpg", "./images/2.jpg", {upscaler: "anime4k", scale: 4})
+        const result = await waifu2x.upscaleImage("./images/1.jpg", "./images/2.jpg", {upscaler: "real-esrgan", scale: 4})
         console.log(result)
     } catch (e) {
         console.log(e)

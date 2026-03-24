@@ -282,11 +282,12 @@ export default class Waifu2x {
             }
         } else if (options.upscaler === "real-esrgan") {
             let program = path.join(absolute, "realesrgan-ncnn-vulkan.exe")
-            if (process.platform === "darwin") program = path.join(absolute, "realesrgan-ncnn-vulkan.app")
+            if (process.platform === "darwin") program = `./realesrgan-ncnn-vulkan.app`
             if (process.platform === "linux") program = path.join(absolute, "realesrgan-ncnn-vulkan")
             if (process.platform === "linux" && process.arch === "arm64") program = path.join(absolute, "realesrgan-ncnn-vulkan-arm")
             const ext = path.extname(source).replace(".", "")
-            command = `"${program}" -i "${sourcePath}" -o "${destPath}" -f ${ext} -n ${options.scale === 4 ? "realesrgan-x4plus-anime" : "realesr-animevideov3"}`
+            let macFix = process.platform === "darwin" ? `cd "${absolute}" && ` : ""
+            command = `${macFix}"${program}" -i "${sourcePath}" -o "${destPath}" -f ${ext} -n ${options.scale === 4 ? "realesrgan-x4plus-anime" : "realesr-animevideov3"}`
             if (options.scale) command +=  ` -s ${options.scale}`
             if (options.threads) command += ` -j ${options.threads}:${options.threads}:${options.threads}`
         } else if (options.upscaler === "real-cugan") {
